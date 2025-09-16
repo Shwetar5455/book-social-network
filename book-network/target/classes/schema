@@ -1,0 +1,162 @@
+User entity
+
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name = "_user")
+@EntityListeners(AuditingEntityListener.class)
+public class User implements UserDetails, Principal {
+
+    @Id
+    @GeneratedValue
+    private Integer id;
+    private String firstname;
+    private String lastname;
+    private LocalDate dateOfBirth;
+    @Column(unique = true)
+    private String email;
+    private String password;
+    private boolean accountLocked;
+    private boolean enabled;
+    @OneToMany(mappedBy = "owner")
+    private List<Book> books;
+
+    @ManyToMany(fetch = EAGER)
+    private List<Role> roles;
+
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdDate;
+
+    @LastModifiedDate
+    @Column(insertable = false)
+    private LocalDateTime lastModifiedDate;
+
+    ------
+
+    Role Entity
+
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+ @Entity
+ @Table(name = "role")
+ @EntityListeners(AuditingEntityListener.class)
+public class Role {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)  // Use IDENTITY instead of SEQUENCE
+    private Integer id;
+    @Column(unique = true)
+    private String name;
+    @ManyToMany(mappedBy = "roles")
+    @JsonIgnore
+    private List<User> user;
+
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdDate;
+
+    @LastModifiedDate
+    @Column(insertable = false)
+    private LocalDateTime lastModifiedDate;
+
+ --------
+
+Token Entity
+
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+public class Token {
+    @Id
+    @GeneratedValue
+    private Integer id;
+
+    @Column(unique = true)
+    private String token;
+    private LocalDateTime createdAt;
+    private LocalDateTime expiresAt;
+    private LocalDateTime validatedAt;
+
+    @ManyToOne
+    @JoinColumn(name = "userId", nullable = false)
+    private User user;
+
+
+    ------------
+
+BookTransactionHistory Entity
+
+@Getter
+@Setter
+@SuperBuilder
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+public class BookTransactionHistory extends BaseEntity {
+
+//    @ManyToOne
+    @Column(name = "user_id")
+    private String userId;
+    @ManyToOne
+    @JoinColumn(name = "book_id")
+    private Book book;
+    private boolean returned;
+    private boolean returnApproved;
+}
+
+---------------
+
+Feedback Entity
+
+@Getter
+@Setter
+@SuperBuilder
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+public class Feedback extends BaseEntity {
+
+    @Column
+    private Double note;
+    private String comment;
+    @ManyToOne
+    @JoinColumn(name = "book_id")
+    private Book book;
+}
+
+----------------
+
+Book Entity
+
+@Getter
+@Setter
+@SuperBuilder
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+public class Book extends BaseEntity {
+
+    private String title;
+    private String authorName;
+    private String isbn;
+    private String synopsis;
+    private String bookCover;
+    private boolean archived;
+    private boolean shareable;
+     @ManyToOne
+     @JoinColumn(name = "owner_id")
+     private User owner;
+    @OneToMany(mappedBy = "book")
+    private List<Feedback> feedbacks;
+    @OneToMany(mappedBy = "book")
+    private List<BookTransactionHistory> histories;
